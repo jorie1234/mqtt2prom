@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strconv"
 
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
@@ -131,6 +132,22 @@ func main() {
 	},
 		[]string{"name", "label"},
 	)
+	temperatureGauge := promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "environmental",
+		Subsystem: "SENSOR",
+		Name:      "Temperature",
+		Help:      "Temperature",
+	},
+		[]string{"location", "place"},
+	)
+	humidityGauge := promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "environmental",
+		Subsystem: "SENSOR",
+		Name:      "Humidity",
+		Help:      "Humidity",
+	},
+		[]string{"location", "place"},
+	)
 	// Subscribe to topics.
 	err = cli.Subscribe(&client.SubscribeOptions{
 		SubReqs: []*client.SubReq{
@@ -147,6 +164,14 @@ func main() {
 
 					a := r.FindStringSubmatch(string(topicName))
 					if len(a) >= 3 {
+						if a[1] == "temperature" {
+							f, _ := strconv.ParseFloat(string(message), 8)
+							temperatureGauge.WithLabelValues(a[2], a[3]).Set(f)
+						}
+						if a[1] == "humidity" {
+							f, _ := strconv.ParseFloat(string(message), 8)
+							humidityGauge.WithLabelValues(a[2], a[3]).Set(f)
+						}
 						if a[3] == "STATE" {
 							state := SonoffState{}
 							json.Unmarshal(message, &state)

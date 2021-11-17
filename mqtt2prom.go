@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
@@ -74,14 +76,19 @@ func main() {
 	// Terminate the Client.
 	defer cli.Terminate()
 
-	// Connect to the MQTT Server.
-	err := cli.Connect(&client.ConnectOptions{
-		Network:  "tcp",
-		Address:  "ubuntu:1883",
-		ClientID: []byte("mqtt2prom"),
-	})
-	if err != nil {
-		panic(err)
+	for {
+		// Connect to the MQTT Server.
+		err := cli.Connect(&client.ConnectOptions{
+			Network:  "tcp",
+			Address:  "ubuntu:1883",
+			ClientID: []byte("mqtt2prom"),
+		})
+		if err == nil {
+			break
+		}
+		log.Printf("Cannot connect to mqtt server %s\n", err)
+		log.Print("retry in 30s")
+		time.Sleep(30 * time.Second)
 	}
 
 	sonoffGaugesVCC := promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -149,7 +156,7 @@ func main() {
 		[]string{"location", "place"},
 	)
 	// Subscribe to topics.
-	err = cli.Subscribe(&client.SubscribeOptions{
+	err := cli.Subscribe(&client.SubscribeOptions{
 		SubReqs: []*client.SubReq{
 			&client.SubReq{
 				TopicFilter: []byte("#"),

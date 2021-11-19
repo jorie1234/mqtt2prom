@@ -69,7 +69,7 @@ func main() {
 	cli := client.New(&client.Options{
 		// Define the processing of the error handler.
 		ErrorHandler: func(err error) {
-			fmt.Println(err)
+			panic(err)
 		},
 	})
 

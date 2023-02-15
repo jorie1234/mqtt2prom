@@ -1,7 +1,7 @@
 module mqtt2prom
 
 require (
-	github.com/prometheus/client_golang v0.9.3
+	github.com/prometheus/client_golang v1.11.1
 	github.com/yosssi/gmq v0.0.1
 )
 
